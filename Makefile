@@ -83,8 +83,8 @@ define Build/Configure
 	$(MAKE) -C $(PKG_BUILD_DIR) DESTDIR="$(PKG_INSTALL_DIR)" prep
 endef
 
-TARGET_CFLAGS += -ffunction-sections -fdata-sections -flto -fPIC
-TARGET_LDFLAGS += -Wl,--gc-sections -flto -fPIC
+TARGET_CFLAGS += $(FPIC)-ffunction-sections -fdata-sections -flto
+TARGET_LDFLAGS += $(FPIC) -Wl,--gc-sections -flto
 
 define Package/zsh-c/postinst
 #!/bin/sh
@@ -92,7 +92,7 @@ grep zsh $${IPKG_INSTROOT}/etc/shells || \
 	echo "/usr/bin/zsh" >> $${IPKG_INSTROOT}/etc/shells
 
 	# Backwards compatibility
-	if [[ -e /bin/zsh ]] && ([[ ! -L /bin/zsh ]] || [[ "$(readlink -fn $${IPKG_INSTROOT}/bin/zsh)" != "../$(CONFIGURE_PREFIX)/bin/zsh" ]]); then
+	if [ -e /bin/zsh ] && { [ ! -L /bin/zsh ] || [ "$(readlink -fn $${IPKG_INSTROOT}/bin/zsh)" != "../$(CONFIGURE_PREFIX)/bin/zsh" ]; }; then
 		ln -fs "../$(CONFIGURE_PREFIX)/bin/zsh" "$${IPKG_INSTROOT}/bin/zsh"
 	fi
 endef
@@ -113,8 +113,8 @@ define Package/zsh-c/install
 endef
 
 define Package/zsh-c/postrm
-	rm -rf "$${IPKG_INSTROOT}/$(CONFIGURE_PREFIX)/share/zsh/$(PKG_VERSION)"
-	rm -rf "$${IPKG_INSTROOT}/$(CONFIGURE_PREFIX)/lib/zsh/$(PKG_VERSION)"
+	rm -rf "$${IPKG_INSTROOT}/$(CONFIGURE_PREFIX)/share/zsh/$(PKG_VERSION)" \
+	"$${IPKG_INSTROOT}/$(CONFIGURE_PREFIX)/lib/zsh/$(PKG_VERSION)"
 endef
 
 $(eval $(call BuildPackage,zsh-c))
